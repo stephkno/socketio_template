@@ -1,0 +1,107 @@
+<html>
+<head>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.0.3/socket.io.js"></script>
+
+</head>
+
+<body>
+
+<form id="name" action="">
+<input type="text" name="name" placeholder="Username"><br>
+<input type="button" id="login" onclick="loginuser()" value="Login">
+</form>
+
+<div class="container">
+</div>
+
+<form id="message">
+<input type="text" name="message" placeholder="Message"><br>
+<input type="button" id="send" onclick="sendmsg()" value="Send">
+
+
+</form>
+
+<div class="messages">
+</div>
+
+</body>
+<script type = "text/javascript">
+
+
+	var socket = new io.connect('http://afternoon-waters-64609.herokuapp.com/', {'port':3000});
+
+socket.connect();
+socket.on('connect', function(){
+	console.log("Connected");
+	document.getElementById("login").disabled = false;
+
+});
+
+socket.on('message', function(data){
+	//console.log("message: " + data.msg);
+	console.log(data.msg);
+	$(".messages").append($("<p>" + data.msg.msg + "</p>"));
+
+});
+
+
+socket.on('disconnect', function(){
+	console.log('Disconnected');
+	
+});
+
+var username;
+
+function sendmsg(){
+
+	var text=document.getElementById("message").message.value;
+	document.getElementById("message").message.value = "";
+
+	var message = document.getElementById("name").name.value + ": " + text;
+	socket.emit("message", {msg: message});
+	$(".messages").append($("<p>" + message + "</p>"));
+}
+
+function loginuser(){
+
+	var form = document.getElementById("name");
+	username = form.name.value;
+//	console.log(username);
+	socket.emit("login", {msg: username});
+
+}
+
+socket.on('newuser', function(data){
+
+	console.log(data.msg);
+	$(".container").empty();
+	$(".container").append("Users:");
+	
+	for(var i = 0; i < data.msg.length; i++){
+		$(".container").append($("<p>" + data.msg[i].uname + "</p>"));
+	}
+});
+
+socket.on('login', function(data){
+
+	console.log(data.msg);
+	$(".container").empty();
+	$(".container").append("Users:");
+	
+	for(var i = 0; i < data.msg.length; i++){
+	
+		$(".container").append($("<p>" + data.msg[i].uname + "</p>"));
+	
+	}
+	$("#name").hide();
+	document.getElementById("login").disabled = true;
+	document.getElementById("send").disabled = false;
+
+});
+</script>
+
+
+</html>
